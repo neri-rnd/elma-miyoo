@@ -1,6 +1,8 @@
 #ifndef PLATFORM_UTILS_H
 #define PLATFORM_UTILS_H
 
+#include <cstdio>
+
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -22,6 +24,7 @@ constexpr double TWO_PI = PI * 2.0;
 
 bool is_ascii_character(unsigned char c);
 bool is_char_valid_for_filename(unsigned char c);
+FILE* fopen_icase(const char* path, const char* mode);
 
 #ifndef _WIN32
 

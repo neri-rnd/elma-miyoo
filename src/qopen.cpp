@@ -63,7 +63,7 @@ void init_qopen() {
         return;
     }
 
-    FILE* h = fopen(RES_FILENAME, "rb");
+    FILE* h = fopen_icase(RES_FILENAME, "rb");
     if (!h) {
         external_error("Missing file!: ", RES_FILENAME);
     }
@@ -120,7 +120,7 @@ FILE* qopen(const char* filename, const char* mode) {
     if (USE_RES_FILE) {
         for (int i = 0; i < FileCount; i++) {
             if (strcmpi(filename, ResFiles[i].filename) == 0) {
-                Handles[NumHandles] = fopen(RES_FILENAME, mode);
+                Handles[NumHandles] = fopen_icase(RES_FILENAME, mode);
                 HandleOffset[NumHandles] = i;
                 if (!Handles[NumHandles]) {
                     internal_error("qopen() failed to open: ", RES_FILENAME);

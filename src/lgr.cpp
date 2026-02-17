@@ -48,7 +48,8 @@ void lgrfile::load_lgr_file(char* lgr_name) {
 
     char path[30];
     sprintf(path, "lgr/%s.lgr", lgr_name);
-    if (access(path, 0) != 0) {
+    FILE* lgr_test = fopen_icase(path, "rb");
+    if (!lgr_test) {
         // LGR not found
         if (!Ptop) {
             internal_error("load_lgr_file !Ptop!");
@@ -84,9 +85,13 @@ void lgrfile::load_lgr_file(char* lgr_name) {
 
         strcpy(path, "lgr/default.lgr");
         Ptop->lgr_not_found = true;
-        if (access(path, 0) != 0) {
+        FILE* def_test = fopen_icase(path, "rb");
+        if (!def_test) {
             external_error("Could not open file lgr/default.lgr!");
         }
+        fclose(def_test);
+    } else {
+        fclose(lgr_test);
     }
     // Actually load the lgr
     strcpy(CurrentLgrName, lgr_name);
@@ -471,7 +476,7 @@ lgrfile::lgrfile(const char* lgrname) {
     // Load file
     char path[30];
     sprintf(path, "lgr/%s.lgr", lgrname);
-    FILE* h = fopen(path, "rb");
+    FILE* h = fopen_icase(path, "rb");
     if (!h) {
         external_error("Cannot find file:", path);
     }
@@ -487,8 +492,11 @@ lgrfile::lgrfile(const char* lgrname) {
     if (strncmp(version, "LGR", 3) != 0) {
         external_error("This is not an LGR file!:", path);
     }
-    if (strcmp(version + 3, "12") != 0) {
-        external_error("LGR file's version is too new!:", path);
+    bool is_lgr13 = false;
+    if (strcmp(version + 3, "13") == 0) {
+        is_lgr13 = true;
+    } else if (strcmp(version + 3, "12") != 0) {
+        external_error("LGR file's version is not supported!:", path);
     }
 
     // Pcx object file count
@@ -515,6 +523,11 @@ lgrfile::lgrfile(const char* lgrname) {
         if (fread(asset_filename, 1, 20, h) != 20) {
             ERROR_CORRUPT();
         }
+        unsigned short meta_w = 0, meta_h = 0;
+        if (is_lgr13) {
+            fread(&meta_w, 1, 2, h);
+            fread(&meta_h, 1, 2, h);
+        }
         int asset_size = 0;
         if (fread(&asset_size, 1, 4, h) != 4) {
             ERROR_CORRUPT();
@@ -526,6 +539,15 @@ lgrfile::lgrfile(const char* lgrname) {
         int curpos = ftell(h);
         pic8* asset_pic = new pic8(asset_filename, h);
         fseek(h, curpos + asset_size, SEEK_SET);
+
+        // Prescale LGR13 hi-res assets to their metadata (classic) dimensions
+        if (is_lgr13 && meta_h > 0) {
+            int actual_h = asset_pic->get_height();
+            if (actual_h != meta_h) {
+                double prescale = (double)meta_h / (double)actual_h;
+                asset_pic = pic8::scale(asset_pic, prescale);
+            }
+        }
 
         if (strcmpi(asset_filename, "q1bike.pcx") == 0) {
             q1bike = asset_pic;

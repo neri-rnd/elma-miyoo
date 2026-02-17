@@ -18,6 +18,10 @@ sdl2/
 
 # Debug logs (generated on device)
 debug.log
+audio_log.txt
+
+# Release zips
+*.zip
 
 # Elma assets
 deploy/Roms/PORTS/Games/Elma/lgr/

@@ -1,6 +1,10 @@
+#include "platform_utils.h"
+#include <cstdio>
+#include <cstring>
+#include <dirent.h>
+
 #ifndef _WIN32
 #include <cassert>
-#include <cstring>
 #include <string>
 
 void itoa(int value, char* str, int base) {
@@ -56,4 +60,39 @@ bool is_char_valid_for_filename(unsigned char c) {
     }
 
     return is_ascii_character(c);
+}
+
+FILE* fopen_icase(const char* path, const char* mode) {
+    FILE* f = fopen(path, mode);
+    if (f) return f;
+
+    // Extract directory and filename from path
+    const char* slash = strrchr(path, '/');
+    char dir_buf[256];
+    const char* target;
+    if (slash) {
+        int dir_len = (int)(slash - path);
+        if (dir_len >= (int)sizeof(dir_buf)) return nullptr;
+        memcpy(dir_buf, path, dir_len);
+        dir_buf[dir_len] = '\0';
+        target = slash + 1;
+    } else {
+        strcpy(dir_buf, ".");
+        target = path;
+    }
+
+    DIR* dir = opendir(dir_buf);
+    if (!dir) return nullptr;
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        if (strcmpi(entry->d_name, target) == 0) {
+            char full_path[512];
+            snprintf(full_path, sizeof(full_path), "%s/%s", dir_buf, entry->d_name);
+            closedir(dir);
+            return fopen(full_path, mode);
+        }
+    }
+    closedir(dir);
+    return nullptr;
 }

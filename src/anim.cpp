@@ -9,13 +9,15 @@ anim::anim(pic8* source_sheet, const char* error_filename, double scale) {
         frames[i] = nullptr;
     }
 
-    // Get total number of animation frames
-    if (source_sheet->get_width() % ANIM_WIDTH) {
+    // Get total number of animation frames.
+    // Frame size is derived from the source height (40 for classic LGR, larger for Remastered).
+    int frame_size = source_sheet->get_height();
+    if (frame_size <= 0 || source_sheet->get_width() % frame_size) {
         char tmp[80];
-        sprintf(tmp, "Picture xsize must be a multiple of %d!", ANIM_WIDTH);
+        sprintf(tmp, "Picture xsize must be a multiple of %d!", frame_size);
         external_error(tmp, error_filename);
     }
-    frame_count = source_sheet->get_width() / ANIM_WIDTH;
+    frame_count = source_sheet->get_width() / frame_size;
     if (frame_count < 0) {
         internal_error("anim::anim frame_count < 0");
     }
@@ -25,12 +27,17 @@ anim::anim(pic8* source_sheet, const char* error_filename, double scale) {
         external_error(tmp, error_filename);
     }
 
+    // Scale factor: normalize to ANIM_WIDTH base size, then apply user zoom.
+    // For classic LGR (frame_size==ANIM_WIDTH), effective_scale == scale (unchanged).
+    // For Remastered LGR (frame_size>ANIM_WIDTH), frames are scaled down to match.
+    double effective_scale = scale * ANIM_WIDTH / (double)frame_size;
+
     // Split the source picture into individual frames
     for (int i = 0; i < frame_count; i++) {
-        frames[i] = new pic8(ANIM_WIDTH, ANIM_WIDTH);
+        frames[i] = new pic8(frame_size, frame_size);
         unsigned char transparency = source_sheet->gpixel(0, 0);
-        blit8(frames[i], source_sheet, -ANIM_WIDTH * i, 0);
-        frames[i] = pic8::scale(frames[i], scale);
+        blit8(frames[i], source_sheet, -frame_size * i, 0);
+        frames[i] = pic8::scale(frames[i], effective_scale);
         forditkepet(frames[i]);
         spriteosit(frames[i], transparency);
     }

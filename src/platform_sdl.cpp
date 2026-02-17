@@ -476,9 +476,39 @@ bool is_fullscreen() {
 static SDL_AudioDeviceID SDLAudioDevice;
 static bool SDLSoundInitialized = false;
 
+#ifdef MIYOO_MINI
+// Intermediate buffer for 11025 Hz mixer output
+static int16_t mixer_buf_11k[1024];
+
+static void audio_callback(void* udata, Uint8* stream, int len) {
+    int out_samples = len / 2;             // S16 mono samples in output
+    int in_samples = out_samples / 4;      // exact 4x ratio (44100/11025)
+
+    sound_mixer((short*)mixer_buf_11k, in_samples);
+
+    // 4x linear interpolation upsample: 11025 -> 44100
+    int16_t* out = (int16_t*)stream;
+    int i;
+    for (i = 0; i < in_samples - 1; i++) {
+        int16_t s0 = mixer_buf_11k[i];
+        int16_t s1 = mixer_buf_11k[i + 1];
+        out[i * 4]     = s0;
+        out[i * 4 + 1] = (int16_t)(s0 + (s1 - s0) / 4);
+        out[i * 4 + 2] = (int16_t)(s0 + (s1 - s0) / 2);
+        out[i * 4 + 3] = (int16_t)(s0 + 3 * (s1 - s0) / 4);
+    }
+    // Last sample: hold
+    int16_t last = mixer_buf_11k[in_samples - 1];
+    out[i * 4] = last;
+    out[i * 4 + 1] = last;
+    out[i * 4 + 2] = last;
+    out[i * 4 + 3] = last;
+}
+#else
 static void audio_callback(void* udata, Uint8* stream, int len) {
     sound_mixer((short*)stream, len / 2);
 }
+#endif
 
 void init_sound() {
     if (SDLSoundInitialized) {
@@ -489,9 +519,15 @@ void init_sound() {
     SDL_AudioSpec desired_spec;
     memset(&desired_spec, 0, sizeof(desired_spec));
     desired_spec.callback = audio_callback;
+#ifdef MIYOO_MINI
+    desired_spec.freq = 44100;
+    desired_spec.channels = 1;
+    desired_spec.samples = 256;
+#else
     desired_spec.freq = 11025;
     desired_spec.channels = 1;
     desired_spec.samples = 512;
+#endif
     desired_spec.format = AUDIO_S16LSB;
 
 #ifdef MIYOO_MINI

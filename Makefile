@@ -137,7 +137,7 @@ else
 endif
 
 # Version
-CXXFLAGS += -DELMA_VERSION='"1.0"'
+CXXFLAGS += -DELMA_VERSION='"1.1"'
 
 # Common warnings
 CXXFLAGS += -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare

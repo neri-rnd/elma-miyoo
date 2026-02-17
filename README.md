@@ -6,13 +6,22 @@ A port of [Elasto Mania](https://elastomania.com/) (the classic motorbike physic
 
 ## Quick Install
 
-1. Download `elma-miyoo-v1.0.zip` from the [Releases](https://github.com/neri-rnd/elma-miyoo/releases) page
+1. Download `elma-miyoo-v1.1.zip` from the [Releases](https://github.com/neri-rnd/elma-miyoo/releases) page
 2. Extract the zip — it contains a `Roms/` folder
 3. Copy the `Roms/` folder to the root of your OnionOS SD card (merge with existing)
 4. **Copy game data files** from your Elasto Mania installation:
    - `elma.res` → `Roms/PORTS/Games/Elma/`
    - `Lgr/Default.lgr` → `Roms/PORTS/Games/Elma/lgr/default.lgr`
 5. Launch from OnionOS: **Games → Shortcuts → Racing → Elma**
+
+### Using Steam Elasto Mania Remastered Assets
+
+If you own [Elasto Mania Remastered](https://store.steampowered.com/app/1290220/Elasto_Mania_Remastered/) on Steam, you can use its assets:
+
+1. Copy `elma.res` from the Steam installation → `Roms/PORTS/Games/Elma/`
+2. For graphics: copy **`orig.lgr`** (not `default.lgr`) from the Steam `Lgr/` folder → rename it to `default.lgr` on the SD card
+
+> **Why `orig.lgr`?** Steam's `default.lgr` is a hi-res Remastered format (LGR13) that works but uses upscaled assets. `orig.lgr` contains the classic-style graphics which look better on the Miyoo's 640x480 screen.
 
 ### SD Card Layout
 
@@ -87,7 +96,7 @@ make TARGET=miyoo package
 The release zip can then be built from the `deploy/` directory:
 
 ```bash
-cd deploy && zip -r ../elma-miyoo-v1.0.zip Roms/
+cd deploy && zip -r ../elma-miyoo-v1.1.zip Roms/
 ```
 
 ### Native Build (macOS, for development)
