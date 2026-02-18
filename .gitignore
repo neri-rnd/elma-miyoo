@@ -23,6 +23,12 @@ audio_log.txt
 # Release zips
 *.zip
 
-# Elma assets
+# Elma assets (user-provided, not in repo)
 deploy/Roms/PORTS/Games/Elma/lgr/
 deploy/Roms/PORTS/Games/Elma/elma.res
+deploy-spruce/Roms/PORTS/Elma/lgr/
+deploy-spruce/Roms/PORTS/Elma/elma.res
+
+# Build artifact binaries (produced by make package / package-spruce)
+deploy/Roms/PORTS/Games/Elma/elma
+deploy-spruce/Roms/PORTS/Elma/elma

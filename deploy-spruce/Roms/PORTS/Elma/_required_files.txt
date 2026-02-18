@@ -1,0 +1,2 @@
+elma.res          — Copy from your Elasto Mania installation
+lgr/default.lgr   — Copy Lgr/Default.lgr from your Elasto Mania installation

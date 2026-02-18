@@ -147,7 +147,7 @@ OBJECTS = $(patsubst $(SRCDIR)/%.cpp,$(BUILDDIR)/%.o,$(patsubst $(SRCDIR)/%.CPP,
 # Handle glad.c separately for native builds
 OBJECTS := $(patsubst $(SRCDIR)/glad/%.c,$(BUILDDIR)/glad/%.o,$(OBJECTS))
 
-.PHONY: all clean info package
+.PHONY: all clean info package package-spruce
 
 all: $(BINARY)
 	@echo "Build complete: $(BINARY)"
@@ -181,7 +181,7 @@ info:
 	@echo "SOURCES: $(SOURCES)"
 	@echo "OBJECTS: $(OBJECTS)"
 
-# Create deployment package for Miyoo
+# Create deployment package for Miyoo (OnionOS)
 DEPLOY_DIR = deploy/Roms/PORTS/Games/Elma
 
 package: $(BINARY)
@@ -190,4 +190,26 @@ ifeq ($(TARGET),miyoo)
 	@echo "Stripped binary deployed to $(DEPLOY_DIR)/elma"
 else
 	@echo "Package target only supported for Miyoo builds (make TARGET=miyoo package)"
+endif
+
+# Create deployment package for SpruceOS
+DEPLOY_SPRUCE_DIR = deploy-spruce/Roms/PORTS/Elma
+DEPLOY_ONION_DIR = deploy/Roms/PORTS/Games/Elma
+
+package-spruce: $(BINARY)
+ifeq ($(TARGET),miyoo)
+	@# Strip binary into SpruceOS deploy
+	$(CROSS)strip -o $(DEPLOY_SPRUCE_DIR)/elma $(BINARY)
+	@echo "Stripped binary deployed to $(DEPLOY_SPRUCE_DIR)/elma"
+	@# Sync shared assets from OnionOS deploy
+	cp -r $(DEPLOY_ONION_DIR)/libs/* $(DEPLOY_SPRUCE_DIR)/libs/
+	cp -r $(DEPLOY_ONION_DIR)/lev/* $(DEPLOY_SPRUCE_DIR)/lev/
+	cp -r $(DEPLOY_ONION_DIR)/rec/* $(DEPLOY_SPRUCE_DIR)/rec/
+	cp $(DEPLOY_ONION_DIR)/_required_files.txt $(DEPLOY_SPRUCE_DIR)/
+	cp deploy/Roms/PORTS/Imgs/Elma.png deploy-spruce/Roms/PORTS/Imgs/
+	@# Create zip
+	cd deploy-spruce && zip -r ../elma-spruce-v1.2.zip Roms/
+	@echo "Created elma-spruce-v1.2.zip"
+else
+	@echo "Package target only supported for Miyoo builds (make TARGET=miyoo package-spruce)"
 endif
